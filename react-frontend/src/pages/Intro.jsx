@@ -1,4 +1,36 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+const YT_ID = 'UEsZKyuMFRk';
+
+function YouTubeFacade({ title }) {
+  const [active, setActive] = useState(false);
+  if (active) {
+    return (
+      <iframe
+        src={`https://www.youtube.com/embed/${YT_ID}?autoplay=1`}
+        title={title}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+      />
+    );
+  }
+  return (
+    <div className="yt-facade" onClick={() => setActive(true)}>
+      <img
+        src={`https://img.youtube.com/vi/${YT_ID}/hqdefault.jpg`}
+        alt={title}
+        loading="lazy"
+      />
+      <button className="yt-play" aria-label="Play video">
+        <svg viewBox="0 0 68 48" width="68" height="48">
+          <path d="M66.5 7.8a8.5 8.5 0 00-6-6C55.8 0 34 0 34 0S12.2 0 7.5 1.8a8.5 8.5 0 00-6 6C0 11.5 0 24 0 24s0 12.5 1.5 16.2a8.5 8.5 0 006 6C12.2 48 34 48 34 48s21.8 0 26.5-1.8a8.5 8.5 0 006-6C68 36.5 68 24 68 24s0-12.5-1.5-16.2z" fill="red"/>
+          <path d="M27 34l18-10-18-10v20z" fill="white"/>
+        </svg>
+      </button>
+    </div>
+  );
+}
 
 export default function Intro({ lang }) {
   const t = (nl, en) => lang === 'nl' ? nl : en;
@@ -51,15 +83,9 @@ export default function Intro({ lang }) {
       <div className="sec-label">{t('Projectvideo', 'Project video')}</div>
       <div className="video-box">
         <div className="video-screen">
-          <iframe
-            src="https://www.youtube.com/embed/UEsZKyuMFRk"
-            title="Introductie: Aadorp Digital Twin project"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-          />
+          <YouTubeFacade title="Introductie: Aadorp Digital Twin project" />
         </div>
         <div className="video-foot">
-          <svg viewBox="0 0 24 24"><path d="M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
           <div>
             <div className="vf-title">{t('Introductie: Aadorp Digital Twin project', 'Introduction: Aadorp Digital Twin project')}</div>
             <div className="vf-sub">{t('3DxVERSE projectteam · ca. 3 min', '3DxVERSE project team · approx. 3 min')}</div>
