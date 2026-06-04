@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+.vite/
+
+# Environment variables — never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# Large media — host on Supabase Storage instead
+images/*.mp4
+images/*.mov
+images/*.avi
+
+# Editor / OS
+.vscode/settings.json
+.DS_Store
+Thumbs.db
+*.log
+
+# Supabase local dev (not needed for hosted project)
+supabase/.branches/
+supabase/.temp/
