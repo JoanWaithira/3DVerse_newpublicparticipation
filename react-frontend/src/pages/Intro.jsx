@@ -51,9 +51,12 @@ export default function Intro({ lang }) {
       <div className="sec-label">{t('Projectvideo', 'Project video')}</div>
       <div className="video-box">
         <div className="video-screen">
-          <video controls>
-            <source src="/images/ESDL%20in%20ArcGIS%20Video%203.mp4" type="video/mp4" />
-          </video>
+          <iframe
+            src="https://www.youtube.com/embed/UEsZKyuMFRk"
+            title="Introductie: Aadorp Digital Twin project"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
         </div>
         <div className="video-foot">
           <svg viewBox="0 0 24 24"><path d="M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
