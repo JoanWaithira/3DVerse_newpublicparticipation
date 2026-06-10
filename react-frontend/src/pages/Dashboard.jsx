@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { getRoadmapItems } from '../api/client';
+import { getRoadmapItems, getSurveyStats } from '../api/client';
 
 const STATUS_META = {
   'in-progress': { color: '#1a9e6e', label: { en: 'In progress', nl: 'Bezig' } },
@@ -8,17 +8,43 @@ const STATUS_META = {
 };
 const STATUS_ORDER = ['in-progress', 'planned', 'done'];
 
+// ── Mini bar chart ────────────────────────────────────────────────────────────
+
+function MiniBar({ data, total, color }) {
+  if (!data || !data.length) return <p style={{ fontSize: 12, color: 'var(--gray-400)' }}>—</p>;
+  const max = data[0][1];
+  return (
+    <div className="db-bars">
+      {data.map(([label, count]) => (
+        <div className="db-bar-row" key={label}>
+          <div className="db-bar-label">{label}</div>
+          <div className="db-bar-track">
+            <div className="db-bar-fill" style={{ width: `${Math.round((count / max) * 100)}%`, background: color }} />
+          </div>
+          <div className="db-bar-pct">{total ? Math.round((count / total) * 100) : 0}%</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+
 export default function Dashboard({ lang }) {
   const t = (nl, en) => lang === 'nl' ? nl : en;
 
   const [items,   setItems]   = useState([]);
+  const [stats,   setStats]   = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getRoadmapItems()
-      .then(setItems)
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
+    Promise.all([
+      getRoadmapItems().catch(() => []),
+      getSurveyStats().catch(() => null),
+    ]).then(([roadmap, surveyStats]) => {
+      setItems(roadmap);
+      setStats(surveyStats);
+    }).finally(() => setLoading(false));
   }, []);
 
   const grouped = useMemo(() => (
@@ -29,8 +55,14 @@ export default function Dashboard({ lang }) {
   ), [items]);
 
   const inProgress = grouped['in-progress']?.length ?? 0;
-  const planned = grouped['planned']?.length ?? 0;
-  const done = grouped['done']?.length ?? 0;
+  const done       = grouped['done']?.length ?? 0;
+
+  const n      = stats?.total   ?? 0;
+  const aiYes  = stats?.ai_yes  ?? 0;
+  const aiPct  = n ? Math.round((aiYes / n) * 100) : 0;
+  const q2Data = stats?.q2 ?? [];
+  const q3Data = stats?.q3 ?? [];
+  const q7Data = stats?.q7 ?? [];
 
   if (loading) {
     return (
@@ -69,75 +101,92 @@ export default function Dashboard({ lang }) {
       </div>
 
       {/* ════════════════════════════════════════════════════════════════════ */}
-      {/* SECTION 1 — Development Overview                                   */}
+      {/* SECTION 1 — Community input stats                                  */}
       {/* ════════════════════════════════════════════════════════════════════ */}
       <div className="cd-section-label">
         <span className="cd-section-dot" style={{ background: '#1a5fa8' }} />
-        {t('Ontwikkelstatus', 'Development status')}
+        {t('Gemeenschapsinput', 'Community input')}
       </div>
 
       <div className="dash-live-grid">
+        <div className="dash-live-card">
+          <div className="dash-live-num">{n}</div>
+          <div className="dash-live-lbl">{t('Inzendingen', 'Responses')}</div>
+          <div className="dash-live-note">{t('ingevulde enquêtes', 'surveys completed')}</div>
+        </div>
+        <div className="dash-live-card">
+          <div className="dash-live-num">{aiPct}%</div>
+          <div className="dash-live-lbl">{t('Wil AI-assistent', 'Want AI assistant')}</div>
+          <div className="dash-live-note">{t(`${aiYes} van ${n} respondenten`, `${aiYes} of ${n} respondents`)}</div>
+        </div>
         <div className="dash-live-card">
           <div className="dash-live-num">{inProgress}</div>
           <div className="dash-live-lbl">{t('In uitvoering', 'In progress')}</div>
           <div className="dash-live-note">{t('actief door projectteam', 'actively worked on')}</div>
         </div>
         <div className="dash-live-card">
-          <div className="dash-live-num">{planned}</div>
-          <div className="dash-live-lbl">{t('Gepland', 'Planned')}</div>
-          <div className="dash-live-note">{t('volgende ontwikkelfase', 'next development phase')}</div>
-        </div>
-        <div className="dash-live-card">
           <div className="dash-live-num">{done}</div>
           <div className="dash-live-lbl">{t('Afgerond', 'Completed')}</div>
           <div className="dash-live-note">{t('gereed voor bewoners', 'ready for residents')}</div>
         </div>
-        <div className="dash-live-card">
-          <div className="dash-live-num">{items.length}</div>
-          <div className="dash-live-lbl">{t('Totaal roadmap-items', 'Total roadmap items')}</div>
-          <div className="dash-live-note">{t('publieke voortgangsoverzicht', 'public progress overview')}</div>
-        </div>
       </div>
+
+      {/* ── Survey insights ── */}
+      {n > 0 && (
+        <>
+          <div className="cd-section-label" style={{ marginTop: 8 }}>
+            <span className="cd-section-dot" style={{ background: '#1a9e6e' }} />
+            {t('Wat bewoners willen zien', 'What residents want to see')}
+          </div>
+          <div className="db-insights-grid">
+
+            <div className="db-insight-card">
+              <div className="db-insight-title">
+                {t('Energie-prioriteit (V2)', 'Energy priority (Q2)')}
+              </div>
+              <MiniBar data={q2Data} total={n} color="var(--green)" />
+            </div>
+
+            <div className="db-insight-card">
+              <div className="db-insight-title">
+                {t('Eigen woning of buurt? (V3)', 'Own home or neighbourhood? (Q3)')}
+              </div>
+              <MiniBar data={q3Data} total={n} color="#1a5fa8" />
+            </div>
+
+            <div className="db-insight-card">
+              <div className="db-insight-title">
+                {t('Technologievoorkeuren (V7)', 'Technology preferences (Q7)')}
+              </div>
+              <MiniBar data={q7Data} total={n} color="#c07a10" />
+            </div>
+
+            <div className="db-insight-card">
+              <div className="db-insight-title">
+                {t('AI-ondersteuning (V8)', 'AI support (Q8)')}
+              </div>
+              <div className="db-ai-row">
+                <div className="db-ai-bar-wrap">
+                  <div className="db-ai-bar" style={{ width: `${aiPct}%` }} />
+                </div>
+                <span className="db-ai-label">{aiPct}% {t('wil AI', 'want AI')}</span>
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 6 }}>
+                {aiYes} {t('ja', 'yes')} · {n - aiYes} {t('nee', 'no')} · {n} {t('totaal', 'total')}
+              </div>
+            </div>
+
+          </div>
+        </>
+      )}
 
       {/* ════════════════════════════════════════════════════════════════════ */}
       {/* SECTION 2 — Public Development Roadmap                             */}
       {/* ════════════════════════════════════════════════════════════════════ */}
-      <div className="cd-section-label">
+      <div className="cd-section-label" style={{ marginTop: 8 }}>
         <span className="cd-section-dot" style={{ background: '#c07a10' }} />
         {t('Publieke ontwikkelroadmap', 'Public development roadmap')}
       </div>
-      <p className="cd-section-sub">
-        {t(
-          'Hier zie je alleen de voortgang van het project. Diepere statistieken en beheerfuncties staan in het adminpaneel.',
-          'This page shows project progress only. Detailed analytics and management actions are available in the admin panel.'
-        )}
-      </p>
-
-      {items.length > 0 && (
-        <div className="cd-bridge">
-          <span className="cd-bridge-num">{items.length}</span>
-          <span className="cd-bridge-text">
-            {t(
-              `${inProgress} in uitvoering · ${planned} gepland · ${done} afgerond`,
-              `${inProgress} in progress · ${planned} planned · ${done} completed`
-            )}
-          </span>
-        </div>
-      )}
-
-      {/* ════════════════════════════════════════════════════════════════════ */}
-      {/* SECTION 3 — Development roadmap                                    */}
-      {/* ════════════════════════════════════════════════════════════════════ */}
-      <div className="cd-section-label">
-        <span className="cd-section-dot" style={{ background: '#1a9e6e' }} />
-        {t('Roadmap-details', 'Roadmap details')}
-      </div>
-      <p className="cd-section-sub">
-        {t(
-          'Bekijk de actuele projectitems per status.',
-          'View current project items by status.'
-        )}
-      </p>
 
       {items.length === 0 ? (
         <p style={{ fontSize: 13, color: 'var(--gray-400)', paddingBottom: 16 }}>

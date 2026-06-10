@@ -154,6 +154,7 @@ export default function Intro({ lang }) {
       <div className="page-footer">
         3DxVERSE · Aadorp Local Digital Twin · Co-funded by the European Union (CIVIS)<br />
         {t('Vragen? ', 'Questions? ')}<a href="mailto:data-protection-officer@3dxverse.eu">data-protection-officer@3dxverse.eu</a>
+        {' · '}<a href="/privacy">{t('Privacybeleid', 'Privacy policy')}</a>
       </div>
     </div>
   );

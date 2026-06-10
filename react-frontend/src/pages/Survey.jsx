@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { submitResponse, submitIdea } from '../api/client';
+import { submitResponse, submitIdea, getResponseCount } from '../api/client';
 
 // ── Embedded preview component ────────────────────────────────────────────────
 // Lazy-loads an iframe only after the user clicks "View preview".
@@ -42,33 +42,6 @@ function EmbedPreview({ src, title, label, lang }) {
           />
         </div>
       )}
-    </div>
-  );
-}
-
-const SUBMITTED_KEY = 'aadorp_survey_done';
-
-// ── Already-submitted screen ──────────────────────────────────────────────────
-
-function AlreadyDone({ lang }) {
-  const t = (nl, en) => lang === 'nl' ? nl : en;
-  return (
-    <div className="inner">
-      <div className="already-done-wrap">
-        <div className="already-done-icon">✅</div>
-        <h2 className="already-done-title">
-          {t('Je hebt al meegedaan!', 'You have already participated!')}
-        </h2>
-        <p className="already-done-sub">
-          {t(
-            'Jouw antwoorden zijn opgeslagen. Bedankt voor je bijdrage aan de Aadorp digitale tweeling.',
-            'Your answers have been saved. Thank you for contributing to the Aadorp digital twin.'
-          )}
-        </p>
-        <a className="btn-primary" href="/wishlist" style={{ textDecoration: 'none', display: 'inline-block' }}>
-          {t('Bekijk de wenslijst →', 'View the community wishlist →')}
-        </a>
-      </div>
     </div>
   );
 }
@@ -221,13 +194,47 @@ function YesNo({ value, onChange, lang }) {
   );
 }
 
+// ── Already-submitted screen ─────────────────────────────────────────────────
+
+const SUBMITTED_KEY = 'aadorp_survey_done';
+
+function AlreadyDone({ lang }) {
+  const t = (nl, en) => lang === 'nl' ? nl : en;
+  return (
+    <div className="inner">
+      <div className="already-done-wrap">
+        <div className="already-done-icon">✅</div>
+        <h2 className="already-done-title">
+          {t('Je hebt al meegedaan!', 'You have already participated!')}
+        </h2>
+        <p className="already-done-sub">
+          {t(
+            'Jouw antwoorden zijn opgeslagen. Bedankt voor je bijdrage aan de Aadorp digitale tweeling.',
+            'Your answers have been saved. Thank you for contributing to the Aadorp digital twin.'
+          )}
+        </p>
+        <a className="btn-primary" href="/dashboard" style={{ textDecoration: 'none', display: 'inline-block' }}>
+          {t('Bekijk het community dashboard →', 'View the community dashboard →')}
+        </a>
+      </div>
+    </div>
+  );
+}
+
 // ── Thank-you screen ──────────────────────────────────────────────────────────
 
 function ThankYou({ lang }) {
   const t = (nl, en) => lang === 'nl' ? nl : en;
   const navigate = useNavigate();
+  const [count, setCount] = useState(null);
 
-  const dots = Array.from({ length: 42 }, (_, i) => ({
+  useEffect(() => {
+    getResponseCount().then(setCount).catch(() => {});
+  }, []);
+
+  const displayCount = count ?? '…';
+  const dotCount = Math.min(Math.max((count ?? 1) - 1, 0), 60);
+  const dots = Array.from({ length: dotCount }, (_, i) => ({
     faint: Math.random() < 0.25,
     key: i,
   }));
@@ -244,7 +251,7 @@ function ThankYou({ lang }) {
         </p>
         <div className="impact-row">
           <div className="imp-card">
-            <div className="imp-num">43</div>
+            <div className="imp-num">{displayCount}</div>
             <div className="imp-lbl">{t('bewoners deden mee', 'residents participated')}</div>
           </div>
           <div className="imp-card">
@@ -279,6 +286,11 @@ function ThankYou({ lang }) {
 export default function Survey({ lang }) {
   const t = (nl, en) => lang === 'nl' ? nl : en;
 
+  const [alreadyDone] = useState(() => {
+    try { return Boolean(localStorage.getItem(SUBMITTED_KEY)); }
+    catch { return false; }
+  });
+
   const [answers, setAnswers] = useState({
     role: '',
     q1: '',
@@ -312,7 +324,18 @@ export default function Survey({ lang }) {
     });
   }
 
+  const isComplete = completedCount === requiredFields.length;
+
   async function handleSubmit() {
+    if (!isComplete) {
+      const remaining = requiredFields.length - completedCount;
+      setError(t(
+        `Beantwoord nog ${remaining} verplichte vraag${remaining === 1 ? '' : 'en'} voordat je indient.`,
+        `Please answer ${remaining} more required question${remaining === 1 ? '' : 's'} before submitting.`
+      ));
+      document.getElementById('survey-questions')?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
     setSubmitting(true);
     setError('');
     try {
@@ -330,6 +353,7 @@ export default function Survey({ lang }) {
       });
       // Every survey response is also published as a wishlist idea.
       await submitIdea(buildIdeaPayload(answers)).catch(() => {});
+      try { localStorage.setItem(SUBMITTED_KEY, '1'); } catch {}
       setSubmitted(true);
       window.scrollTo(0, 0);
     } catch (err) {
@@ -340,7 +364,8 @@ export default function Survey({ lang }) {
     }
   }
 
-  if (submitted) return <ThankYou lang={lang} />;
+  if (alreadyDone) return <AlreadyDone lang={lang} />;
+  if (submitted)   return <ThankYou lang={lang} />;
 
   return (
     <div className="inner survey-shell" id="survey-questions">
@@ -551,9 +576,22 @@ export default function Survey({ lang }) {
             'Review your answers before submitting. You can revisit this page later through the dashboard.'
           )}
         </p>
+        {!isComplete && (
+          <p style={{ fontSize: 13, color: 'var(--gray-400)', marginBottom: 8 }}>
+            {t(
+              `${completedCount} van ${requiredFields.length} vragen beantwoord — beantwoord alle vragen om in te dienen.`,
+              `${completedCount} of ${requiredFields.length} questions answered — complete all to submit.`
+            )}
+          </p>
+        )}
         {error && <p style={{ color: 'var(--red)', fontSize: 13, marginBottom: 10 }}>{error}</p>}
 
-        <button className="btn-primary" onClick={handleSubmit} disabled={submitting}>
+        <button
+          className="btn-primary"
+          onClick={handleSubmit}
+          disabled={submitting}
+          style={!isComplete ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+        >
           {submitting ? t('Bezig…', 'Submitting…') : t('Verstuur antwoorden →', 'Submit answers →')}
         </button>
       </div>

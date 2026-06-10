@@ -118,26 +118,27 @@
     opacity: 1;
     margin-right: 6px;
   }
-  .nav-partners img { display: block; width: auto; object-fit: contain; }
-  .nav-partners .logo-3dxverse { height: 30px; }
-  .nav-partners .logo-almelo { height: 27px; }
-  .nav-partners .logo-eu { height: 34px; }
+  .nav-partners img { display: block; object-fit: cover; }
+  .nav-partners .logo-3dxverse { height: 28px; width: auto; max-width: 100px; object-fit: contain; }
+  .nav-partners .logo-almelo   { height: 26px; width: auto; object-fit: contain; border-radius: 4px; }
+  /* Crop EU logo to just the flag — text is illegible at nav size */
+  .nav-partners .logo-eu       { height: 28px; width: 42px; object-position: top center; border-radius: 3px; }
   @media (max-width: 1240px) {
     .nav-partners { gap: 10px; }
-    .nav-partners .logo-3dxverse { height: 24px; }
-    .nav-partners .logo-almelo { height: 22px; }
-    .nav-partners .logo-eu { height: 27px; }
+    .nav-partners .logo-3dxverse { height: 24px; max-width: 84px; }
+    .nav-partners .logo-almelo   { height: 22px; }
+    .nav-partners .logo-eu       { height: 24px; width: 36px; }
   }
   @media (max-width: 980px) {
     .nav-partners { gap: 8px; margin-right: 0; }
-    .nav-partners .logo-3dxverse { height: 20px; }
-    .nav-partners .logo-almelo { height: 18px; }
-    .nav-partners .logo-eu { height: 22px; }
+    .nav-partners .logo-3dxverse { height: 20px; max-width: 70px; }
+    .nav-partners .logo-almelo   { height: 18px; }
+    .nav-partners .logo-eu       { height: 20px; width: 30px; }
   }
   @media (max-width: 760px) {
     .nav-partners .logo-3dxverse,
     .nav-partners .logo-almelo { display: none; }
-    .nav-partners .logo-eu { height: 18px; }
+    .nav-partners .logo-eu { height: 20px; width: 30px; }
   }
 
   /* ── LAYOUT ── */
@@ -216,22 +217,12 @@
     content: ''; position: absolute; inset: 0; z-index: 0;
     background: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255,255,255,0.02) 20px, rgba(255,255,255,0.02) 40px);
   }
-  .video-screen video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; z-index: 2; }
   .video-screen iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; z-index: 2; }
   .yt-facade { position: absolute; inset: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .yt-facade img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .yt-play { position: relative; z-index: 1; background: none; border: none; cursor: pointer; filter: drop-shadow(0 2px 6px rgba(0,0,0,.5)); transition: transform .15s; }
   .yt-play:hover { transform: scale(1.1); }
-  .play-btn {
-    width: 52px; height: 52px; border-radius: 50%;
-    background: var(--green); display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: transform 0.15s, background 0.15s; position: relative; z-index: 1;
-  }
-  .play-btn:hover { transform: scale(1.08); background: var(--green-mid); }
-  .play-btn svg { width: 20px; height: 20px; fill: white; margin-left: 3px; }
-  .video-soon { font-size: 12px; color: rgba(255,255,255,0.5); font-weight: 500; position: relative; z-index: 1; }
   .video-foot { padding: 12px 16px; display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--gray-100); }
-  .video-foot svg { width: 18px; height: 18px; stroke: var(--gray-300); fill: none; stroke-width: 1.8; flex-shrink: 0; }
   .vf-title { font-size: 13px; font-weight: 600; color: var(--gray-700); }
   .vf-sub { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
 
@@ -1045,6 +1036,19 @@
 
   /* ── DASHBOARD ── */
   .dash-live-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .db-insights-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+  .db-insight-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); padding: 14px; }
+  .db-insight-title { font-size: 11px; font-weight: 600; color: var(--gray-500); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 10px; }
+  .db-bars { display: flex; flex-direction: column; gap: 6px; }
+  .db-bar-row { display: flex; align-items: center; gap: 8px; }
+  .db-bar-label { font-size: 11px; color: var(--gray-700); flex: 0 0 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .db-bar-track { flex: 1; height: 8px; background: var(--gray-100); border-radius: 99px; overflow: hidden; }
+  .db-bar-fill { height: 100%; border-radius: 99px; transition: width .4s ease; }
+  .db-bar-pct { font-size: 11px; color: var(--gray-400); flex: 0 0 32px; text-align: right; }
+  .db-ai-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  .db-ai-bar-wrap { flex: 1; height: 10px; background: var(--gray-100); border-radius: 99px; overflow: hidden; }
+  .db-ai-bar { height: 100%; background: var(--green); border-radius: 99px; transition: width .4s ease; }
+  .db-ai-label { font-size: 12px; font-weight: 600; color: var(--gray-700); white-space: nowrap; }
   .dash-live-card { background: var(--white); border: 1px solid var(--gray-200); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); padding: 12px; }
   .dash-live-num { font-family: var(--font-display); font-size: 24px; line-height: 1; color: var(--gray-900); }
   .dash-live-lbl { margin-top: 4px; font-size: 11px; color: var(--gray-400); }
@@ -1482,6 +1486,7 @@
     .dashboard-shell .dash-live-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+    .db-insights-grid { grid-template-columns: 1fr; }
 
     .dashboard-shell .dash-info-grid {
       grid-template-columns: 1fr;

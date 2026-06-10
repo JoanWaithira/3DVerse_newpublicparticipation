@@ -13,11 +13,11 @@ export default function Nav({ lang, setLang }) {
         <NavLink className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')} to="/survey">
           {t('Enquête', 'Survey')}
         </NavLink>
+        <NavLink className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')} to="/wishlist">
+          {t('Wenslijst', 'Wishlist')}
+        </NavLink>
         <NavLink className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')} to="/dashboard">
           {t('Gemeenschap', 'Community')}
-        </NavLink>
-        <NavLink className={({ isActive }) => 'nav-tab' + (isActive ? ' active' : '')} to="/admin">
-          {t('Admin', 'Admin')}
         </NavLink>
       </div>
       <div className="nav-right">

@@ -23,6 +23,20 @@ function toResponse(row) {
 
 // ── Survey responses ──────────────────────────────────────────────────────────
 
+export async function getResponseCount() {
+  const { count, error } = await supabase
+    .from('responses')
+    .select('*', { count: 'exact', head: true });
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function getSurveyStats() {
+  const { data, error } = await supabase.rpc('get_survey_stats');
+  if (error) throw error;
+  return data ?? { total: 0, ai_yes: 0, q2: [], q3: [], q7: [] };
+}
+
 export async function getResponses() {
   const { data, error } = await supabase
     .from('responses')
